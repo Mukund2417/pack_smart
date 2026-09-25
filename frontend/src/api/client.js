@@ -1,13 +1,18 @@
 // Frontend API client connected directly to PackSmart FastAPI backend with live data
 
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+let rawUrl = (import.meta.env.VITE_API_URL || '').trim();
+if (rawUrl.endsWith('/')) {
+  rawUrl = rawUrl.slice(0, -1);
+}
+const BASE_URL = rawUrl;
 
 async function fetchJson(endpoint, options = {}) {
+  const url = `${BASE_URL}${endpoint}`;
   try {
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('packsmart_token') : null;
-    const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const authHeaders = token && token !== 'jury-evaluator-token' ? { 'Authorization': `Bearer ${token}` } : {};
 
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
+    const res = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders,
@@ -18,16 +23,19 @@ async function fetchJson(endpoint, options = {}) {
 
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
-      throw new Error(`Endpoint ${endpoint} returned HTML (backend API is offline or route was rewritten to index.html).`);
+      throw new Error(`Endpoint ${endpoint} returned HTML (backend API is offline or warming up).`);
     }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || `HTTP ${res.status}`);
+      throw new Error(err.detail || `Server error (HTTP ${res.status})`);
     }
     return await res.json();
   } catch (err) {
-    console.error(`API call to ${endpoint} failed:`, err);
+    console.error(`API call to ${url} failed:`, err);
+    if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+      throw new Error(`Unable to connect to backend at ${BASE_URL || 'local server'}. If deploying on Render free tier, the server takes ~30 seconds to wake up. Please wait a moment and try again.`);
+    }
     throw err;
   }
 }
