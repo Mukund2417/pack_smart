@@ -3,31 +3,110 @@ import { Activity, Thermometer, Droplets, Shield, Play, TrendingUp, AlertTriangl
 import { api } from '../api/client';
 import { TRANSLATIONS } from '../data/i18n';
 
+const computeKineticSimulation = (commodity, material, tempNum, rhNum, barrierGrade) => {
+  const base_shelf_life_map = {
+    "apples": 90,
+    "tomatoes": 21,
+    "strawberries": 10,
+    "leafy greens": 12,
+    "fresh produce": 14,
+    "potato chips": 180,
+    "snack": 180,
+    "dry goods": 365,
+    "beef": 7,
+    "poultry": 7,
+    "meat": 7,
+    "cheese": 45,
+    "milk": 14,
+    "bakery": 8
+  };
+
+  const key = commodity.toLowerCase();
+  let base_days = 14;
+  for (const [k, v] of Object.entries(base_shelf_life_map)) {
+    if (key.includes(k)) {
+      base_days = v;
+      break;
+    }
+  }
+
+  const q10 = 2.2;
+  const ref_temp = 4.0;
+  const temp_diff = tempNum - ref_temp;
+  const temp_acceleration = Math.pow(q10, temp_diff / 10.0);
+
+  let rh_factor = 1.0;
+  if (rhNum > 85) {
+    rh_factor += (rhNum - 85) * 0.015;
+  } else if (rhNum < 60) {
+    rh_factor += (60 - rhNum) * 0.01;
+  }
+
+  let barrier_multiplier = 1.0;
+  const mat_lower = material.toLowerCase();
+  if (mat_lower.includes("evoh") || mat_lower.includes("aluminum") || mat_lower.includes("metal") || barrierGrade === "ultra-high") {
+    barrier_multiplier = 1.6;
+  } else if (mat_lower.includes("bopp") || mat_lower.includes("pet") || barrierGrade === "high-barrier") {
+    barrier_multiplier = 1.3;
+  }
+
+  const predicted_days = Math.max(1.0, Math.round(((base_days * barrier_multiplier) / (temp_acceleration * rh_factor)) * 10) / 10);
+  const decay_rate = Math.round((1.0 / predicted_days) * 10000) / 10000;
+
+  const temp_range = [0, 4, 10, 15, 20, 25, 30];
+  const sensitivity_curve = temp_range.map(t => {
+    const t_acc = Math.pow(q10, (t - ref_temp) / 10.0);
+    const est_days = Math.max(1.0, Math.round(((base_days * barrier_multiplier) / (t_acc * rh_factor)) * 10) / 10);
+    return {
+      temperature_c: t,
+      shelf_life_days: est_days,
+      quality_loss_rate: `${Math.round((1.0 / est_days) * 1000) / 1000}x / day`
+    };
+  });
+
+  return {
+    commodity,
+    material,
+    predicted_shelf_life_days: predicted_days,
+    decay_rate_per_day: decay_rate,
+    q10_factor: q10,
+    sensitivity_curve,
+    recommendation_note: `At ${tempNum}°C and ${rhNum}% RH, estimated shelf life is ${predicted_days} days. Keeping storage under 4°C can extend shelf life up to ${sensitivity_curve[0].shelf_life_days} days.`
+  };
+};
+
 export default function ShelfLifePredictor({ lang }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
   const slT = t.shelfLifePage || TRANSLATIONS.en.shelfLifePage || {};
 
-  const [commodity, setCommodity] = useState('Apples (Fresh)');
+  const [commodity, setCommodity] = useState('Apples & Pears (Fresh)');
   const [material, setMaterial] = useState('Micro-Perforated BOPP');
   const [barrierGrade, setBarrierGrade] = useState('standard');
   const [temp, setTemp] = useState(4);
   const [rh, setRh] = useState(85);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(() => computeKineticSimulation('Apples & Pears (Fresh)', 'Micro-Perforated BOPP', 4, 85, 'standard'));
 
   const handleSimulate = async () => {
+    const tempNum = parseFloat(temp);
+    const rhNum = parseFloat(rh);
+    
+    // Instant zero-latency simulation calculation
+    const instantData = computeKineticSimulation(commodity, material, tempNum, rhNum, barrierGrade);
+    setResult(instantData);
+
     setLoading(true);
     try {
       const data = await api.predictShelfLife({
         commodity_type: commodity,
         material_type: material,
-        storage_temp: parseFloat(temp),
-        relative_humidity: parseFloat(rh),
+        storage_temp: tempNum,
+        relative_humidity: rhNum,
         packaging_barrier_grade: barrierGrade
       });
-      setResult(data);
+      if (data) setResult(data);
     } catch (err) {
-      console.error(err);
+      console.warn("Backend prediction call warning, using instant simulation results:", err);
     } finally {
       setLoading(false);
     }
