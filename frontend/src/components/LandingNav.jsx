@@ -36,10 +36,10 @@ export default function LandingNav({ lang, setLang }) {
       localStorage.setItem('packsmart_token', 'jury-evaluator-token');
       localStorage.setItem('packsmart_user', JSON.stringify({
         id: 'user-researcher-1',
-        name: 'Dr. Elena Vance (SIH Evaluator)',
+        name: 'Dr. Elena Vance (Packaging Specialist)',
         email: 'researcher@packsmart.io',
         role: 'researcher',
-        organization_name: 'Smart India Hackathon Jury Panel'
+        organization_name: 'National Food Packaging Consortium'
       }));
     }
     const scenarioParams = {
@@ -91,7 +91,7 @@ export default function LandingNav({ lang, setLang }) {
 
       {/* Right Actions (Desktop) */}
       <div className="hidden md:flex items-center gap-3">
-        {/* ⚡ SIH Jury Demo Quick Launch Dropdown */}
+        {/* ⚡ Demo Scenarios Quick Launch Dropdown */}
         <div className="relative">
           <button
             type="button"
@@ -100,7 +100,7 @@ export default function LandingNav({ lang, setLang }) {
             className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-400/10 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-bold flex items-center gap-1.5 hover:from-amber-500/30 hover:to-amber-400/20 transition-all shadow-sm cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 animate-pulse" />
-            <span>⚡ Jury Demo</span>
+            <span>⚡ Demo Scenarios</span>
             <ChevronDown className="w-3 h-3 text-amber-500 dark:text-amber-400" />
           </button>
 
@@ -114,7 +114,7 @@ export default function LandingNav({ lang, setLang }) {
                 className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-amber-400/40 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden"
               >
                 <div className="px-3 py-1.5 text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase border-b border-slate-100 dark:border-white/10 mb-1 flex items-center justify-between">
-                  <span>SIH 1-Click Evaluation Scenarios</span>
+                  <span>Industry Evaluation Scenarios</span>
                   <span className="bg-amber-400/20 px-1.5 py-0.5 rounded text-[9px] font-bold">Auto-Fill</span>
                 </div>
                 <button

@@ -72,10 +72,10 @@ export function AuthProvider({ children }) {
   const loginAsJury = (role = 'researcher') => {
     const user = {
       id: role === 'admin' ? 'user-admin-1' : 'user-researcher-1',
-      name: role === 'admin' ? 'Dr. Aris Thorne (SIH Lead Evaluator)' : 'Dr. Elena Vance (SIH Evaluator)',
+      name: role === 'admin' ? 'Dr. Aris Thorne (Lead Technical Evaluator)' : 'Dr. Elena Vance (Packaging Specialist)',
       email: role === 'admin' ? 'admin@packsmart.io' : 'researcher@packsmart.io',
       role: role === 'admin' ? 'admin' : 'researcher',
-      organization_name: 'Smart India Hackathon Jury Panel'
+      organization_name: 'National Food Packaging Consortium'
     };
     localStorage.setItem('packsmart_token', 'jury-evaluator-token');
     localStorage.setItem('packsmart_user', JSON.stringify(user));

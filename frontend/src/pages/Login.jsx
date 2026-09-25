@@ -223,18 +223,18 @@ export default function Login({ lang }) {
               </motion.div>
             )}
 
-            {/* Floating Bottom-Left Compact SIH Evaluator Quick Access */}
+            {/* Floating Bottom-Left Compact Evaluator Quick Access */}
             <div className="fixed bottom-4 left-4 z-50">
               <button
                 type="button"
-                id="sih-jury-instant-login"
+                id="evaluator-instant-login"
                 onClick={() => handleJuryLogin('researcher')}
                 disabled={isSubmitting}
                 title="Account: researcher@packsmart.io (Food Scientist Role)"
                 className="py-2 px-3 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/30 transition-all cursor-pointer disabled:opacity-50 border border-amber-300"
               >
                 <Sparkles className="w-3.5 h-3.5 text-slate-950 animate-pulse" />
-                <span>⚡ SIH Jury 1-Click Access</span>
+                <span>⚡ 1-Click Evaluator Access</span>
               </button>
             </div>
 

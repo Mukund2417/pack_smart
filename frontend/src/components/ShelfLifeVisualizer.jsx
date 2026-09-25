@@ -28,27 +28,31 @@ export default function ShelfLifeVisualizer({
                    commodity.toLowerCase().includes('cake') || 
                    commodity.toLowerCase().includes('bakery');
 
-  // Baseline unpackaged shelf life
-  let unpackagedDays = Math.max(1, Math.round(targetDays * 0.2));
-  if (isFresh) unpackagedDays = storageType === 'ambient' ? 3 : 5;
-  else if (isBakery) unpackagedDays = 3;
-  else if (isSnackOrDry) unpackagedDays = 10;
-
-  // Standard monolayer benchmark
-  let standardDays = Math.max(unpackagedDays + 2, Math.round(targetDays * 0.55));
-  if (isFresh) standardDays = storageType === 'ambient' ? 6 : 9;
-  else if (isBakery) standardDays = 5;
-  else if (isSnackOrDry) standardDays = 30;
-
   // Recommended multi-layer PackSmart system
   const recommendedDays = targetDays;
 
-  // Sustainable bio-alternative
-  const sustainableDays = Math.max(standardDays, Math.round(targetDays * 0.85));
+  // Standard monolayer benchmark: always less than recommended, typically 40-55% of target
+  let standardDays = Math.max(1, Math.round(targetDays * 0.5));
+  if (isFresh) standardDays = Math.min(Math.round(targetDays * 0.6), storageType === 'ambient' ? 6 : 9);
+  else if (isBakery) standardDays = Math.min(Math.round(targetDays * 0.6), 5);
+  else if (isSnackOrDry) standardDays = Math.min(Math.round(targetDays * 0.5), 30);
+  // Ensure standardDays is strictly less than targetDays
+  standardDays = Math.min(standardDays, Math.max(1, targetDays - 1));
+
+  // Baseline unpackaged shelf life: strictly lower than standard
+  let unpackagedDays = Math.max(1, Math.min(Math.max(1, standardDays - 1), Math.round(targetDays * 0.2)));
+  if (isFresh) unpackagedDays = Math.min(standardDays - 1, storageType === 'ambient' ? 3 : 5);
+  else if (isBakery) unpackagedDays = Math.min(standardDays - 1, 3);
+  else if (isSnackOrDry) unpackagedDays = Math.min(standardDays - 1, 10);
+  unpackagedDays = Math.max(1, unpackagedDays);
+
+  // Sustainable bio-alternative: 80-90% of target, at least higher than standard
+  const sustainableDays = Math.min(targetDays, Math.max(standardDays, Math.round(targetDays * 0.85)));
 
   // Multiplier & Waste reduction
+  const gainDays = Math.max(1, recommendedDays - standardDays);
   const multiplier = (recommendedDays / Math.max(1, standardDays)).toFixed(1);
-  const wasteReduction = Math.min(85, Math.round((1 - (standardDays / recommendedDays)) * 100));
+  const wasteReduction = Math.max(15, Math.min(85, Math.round((1 - (standardDays / recommendedDays)) * 100)));
 
   const maxDays = Math.max(targetDays * 1.15, standardDays, unpackagedDays, 10);
 
@@ -77,7 +81,7 @@ export default function ShelfLifeVisualizer({
         <div className="flex items-center gap-3">
           <div className="bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-2xl text-right">
             <span className="text-[10px] font-mono text-emerald-400 uppercase block">Shelf-Life Gain</span>
-            <span className="text-base font-mono font-bold text-emerald-300">+{recommendedDays - standardDays} Days ({multiplier}x)</span>
+            <span className="text-base font-mono font-bold text-emerald-300">+{gainDays} Days ({multiplier}x)</span>
           </div>
           <div className="bg-sky-500/10 border border-sky-500/30 px-3.5 py-1.5 rounded-2xl text-right">
             <span className="text-[10px] font-mono text-sky-400 uppercase block">Food Waste Cut</span>
@@ -147,7 +151,7 @@ export default function ShelfLifeVisualizer({
               <span className="truncate max-w-[200px] sm:max-w-none">{standardMaterial}</span>
             </span>
             <span className="font-mono text-slate-400 text-sm">
-              {standardDays} Days <span className="text-[10px] text-amber-400/90 font-mono">(-{recommendedDays - standardDays}d short)</span>
+              {standardDays} Days <span className="text-[10px] text-amber-400/90 font-mono">(-{gainDays}d short)</span>
             </span>
           </div>
           <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden p-0.5 border border-white/5">

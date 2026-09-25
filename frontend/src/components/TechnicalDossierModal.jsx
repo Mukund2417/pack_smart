@@ -127,16 +127,16 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
     </tbody>
   </table>
 
-  <h2>3. SIH 2024 Compliance Checklist</h2>
+  <h2>3. Packaging Standards &amp; Regulatory Compliance Checklist</h2>
   <div class="compliance">
     ${[
       ['Commodity-specific material recommendation', true],
-      ['OTR / WVTR barrier specs generated', !!(results.required_otr)],
+      ['OTR / WVTR barrier specs generated', !!(results.required_otr || results.target_otr || results.otr)],
       ['Ranked material candidates (TOPSIS)', !!(results.ranked_materials?.length > 1)],
-      ['Eco-friendly alternative provided', !!(results.ranked_materials?.[0]?.eco_alternative)],
+      ['Eco-friendly alternative provided', !!(results.eco_alternative || results.ranked_materials?.[0]?.eco_alternative)],
       ['Target shelf life accounted for', !!(results.desired_shelf_life || results.shelf_life_days)],
       ['Storage temperature & type specified', true],
-      ['MAP gas formulation advisory', !!(results.ranked_materials?.[0]?.map_required)],
+      ['MAP gas formulation advisory', !!(results.map_advisory || results.ranked_materials?.[0]?.map_required)],
       ['FSSAI / IS 9845 regulatory reference', true],
       ['Downloadable PDF Dossier / QR Verify', true],
       ['Chemical degradation risk identified', !!(results.chemical_degradation_risk)],
@@ -328,12 +328,12 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
         y += 28;
       });
 
-      // Section 3: SIH 2024 Compliance Checklist
+      // Section 3: Packaging Standards & Regulatory Compliance Checklist
       y += 1;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(146, 64, 14);
-      doc.text('3. SIH 2024 EVALUATION & REGULATORY COMPLIANCE', margin, y);
+      doc.text('3. PACKAGING STANDARDS & REGULATORY COMPLIANCE', margin, y);
       doc.line(margin, y + 1.5, pageWidth - margin, y + 1.5);
       y += 5.5;
 
@@ -727,10 +727,10 @@ Reference only — verify with accredited lab before commercial manufacturing.
             </div>
           )}
 
-          {/* Section 5: SIH 2024 Problem Statement Compliance */}
+          {/* Section 5: Packaging Standards & Regulatory Compliance */}
           <div className="space-y-2">
             <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400 print:text-slate-900 font-mono flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5" /> 5. SIH 2024 Problem Statement — Compliance Checklist
+              <CheckCircle2 className="w-3.5 h-3.5" /> 5. Packaging Standards &amp; Regulatory Compliance Checklist
             </h2>
             <div className="bg-slate-950/60 p-4 rounded-2xl border border-white/10 print:bg-slate-50 print:border-slate-300">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
@@ -739,17 +739,17 @@ Reference only — verify with accredited lab before commercial manufacturing.
                   { req: 'Moisture content accounted for (CVP Rule)', met: !!(results?.resolved_food_profile?.moisture_content) },
                   { req: 'Fat / Oil content consideration', met: !!(results?.resolved_food_profile?.oil_fat_content) },
                   { req: 'pH level used in selection logic', met: !!(results?.resolved_food_profile?.ph_level) },
-                  { req: 'Respiration rate (fresh produce)', met: !!(results?.map_advisory) },
-                  { req: 'Desired shelf life target specified', met: !!(results?.shelf_life_days) },
+                  { req: 'Respiration rate (fresh produce)', met: !!(results?.map_advisory || results?.map_required) },
+                  { req: 'Desired shelf life target specified', met: !!(results?.shelf_life_days || results?.desired_shelf_life) },
                   { req: 'Storage temperature & RH specified', met: true },
                   { req: 'Transportation conditions considered', met: true },
-                  { req: 'OTR / WVTR barrier specs generated', met: !!(results?.target_otr) },
-                  { req: 'Packaging thickness (caliper) specified', met: !!(results?.thickness) },
-                  { req: 'Seal integrity recommendation provided', met: !!(results?.sealability) },
-                  { req: 'MAP gas formulation for fresh commodities', met: !!(results?.map_advisory) },
+                  { req: 'OTR / WVTR barrier specs generated', met: !!(results?.target_otr || results?.required_otr || results?.otr) },
+                  { req: 'Packaging thickness (caliper) specified', met: !!(results?.thickness || results?.ranked_materials?.[0]?.recommended_thickness) },
+                  { req: 'Seal integrity recommendation provided', met: !!(results?.sealability || results?.ranked_materials?.[0]?.sealability) },
+                  { req: 'MAP gas formulation for fresh commodities', met: !!(results?.map_advisory || results?.map_required) },
                   { req: '3-way candidate comparison (TOPSIS)', met: !!(results?.ranked_materials?.length > 1) },
-                  { req: 'Sustainable / eco-friendly alternative shown', met: !!(results?.eco_alternative) },
-                  { req: 'Cost estimate provided (₹/kg)', met: !!(results?.cost_estimate_local) },
+                  { req: 'Sustainable / eco-friendly alternative shown', met: !!(results?.eco_alternative || results?.ranked_materials?.[0]?.eco_alternative) },
+                  { req: 'Cost estimate provided (₹/kg)', met: !!(results?.cost_estimate_local || results?.ranked_materials?.[0]?.cost_estimate_local) },
                   { req: 'FSSAI / IS 9845 regulatory reference', met: true },
                   { req: 'Multi-layer structure breakdown', met: !!(results?.structure_layers?.length > 0) },
                   { req: 'Downloadable PDF Dossier / QR Verify', met: true },

@@ -97,7 +97,7 @@ export default function GetRecommendation({ lang }) {
   const [isDossierOpen, setIsDossierOpen] = useState(false);
   const [showAdvancedInResult, setShowAdvancedInResult] = useState(false);
 
-  // Quick preset chips for rapid testing / SIH demonstration
+  // Quick preset chips for rapid testing / industrial demonstration
   const quickPresets = [
     { label: 'Alphonso Mango', name: 'Fresh Mangoes (Alphonso)', cat: 'freshProduce', storage: 'chilled', temp: 12, rh: 85, days: 14, desc: 'Equilibrium MAP & breathable film' },
     { label: 'Potato Chips', name: 'Crisp Potato Chips', cat: 'snacks', storage: 'ambient', temp: 25, rh: 50, days: 180, desc: 'Gas-tight nitrogen flush & rancidity control' },
@@ -148,31 +148,31 @@ export default function GetRecommendation({ lang }) {
     if (demo === 'mango') {
       applyPreset(quickPresets[0], demoMode);
       setDemoBanner({
-        title: "SIH Scenario Active: Alphonso Mango Export (14 Days)",
+        title: "Preset Scenario: Alphonso Mango Export (14 Days)",
         desc: "Demonstrating breathable micro-perforated packaging with controlled O2/CO2 flux to halt anaerobic fermentation."
       });
     } else if (demo === 'chips') {
       applyPreset(quickPresets[1], demoMode);
       setDemoBanner({
-        title: "SIH Scenario Active: Potato Chips (180 Days)",
+        title: "Preset Scenario: Potato Chips (180 Days)",
         desc: "Demonstrating high-barrier metallized BOPP with nitrogen flushing to prevent lipid oxidation and crunch loss."
       });
     } else if (demo === 'paneer') {
       applyPreset(quickPresets[2], demoMode);
       setDemoBanner({
-        title: "SIH Scenario Active: Fresh Paneer (30 Days)",
+        title: "Preset Scenario: Fresh Paneer (30 Days)",
         desc: "Demonstrating multi-layer EVOH co-extrusion with modified atmosphere gas retention."
       });
     } else if (demo === 'bread') {
       applyPreset(quickPresets[3], demoMode);
       setDemoBanner({
-        title: "SIH Scenario Active: Artisan Sourdough Bread (7 Days)",
+        title: "Preset Scenario: Artisan Sourdough Bread (7 Days)",
         desc: "Demonstrating why breathable micro-perforated bags prevent condensation pooling and rapid mold growth in high-moisture bakery goods."
       });
     } else if (demo === 'pickle') {
       applyPreset(quickPresets[5], demoMode);
       setDemoBanner({
-        title: "SIH Scenario Active: Mango Pickle — Acidity & Oil Defense (365 Days)",
+        title: "Preset Scenario: Mango Pickle — Acidity & Oil Defense (365 Days)",
         desc: "Demonstrating PET/Alu-Foil/CPP laminate for 1-year ambient shelf life with corrosion-resistant hermetic seal against low-pH high-oil food matrix."
       });
     }
@@ -301,56 +301,310 @@ export default function GetRecommendation({ lang }) {
       const isAmbient = (inputData.storageType || '') === 'ambient';
       const shelf     = parseOptInt(inputData.desiredShelfLife, 14);
 
-      let mat1, mat2, otr, wvtr, degradation, priority = inputData.priority || 'balanced';
+      let mat1, mat2, otrVal, wvtrVal, thickVal, degradation, priority = inputData.priority || 'balanced';
 
       if (isFrozen) {
-        mat1 = { name: 'PA / LLDPE Cryogenic Co-extrusion', type: 'Cryogenic Barrier Film', otr: '0.8 cc/m²/day', wvtr: '0.3 g/m²/day', map: 'Vacuum sealed', eco: 'Recyclable Mono-PP Cryofilm', confidence: 96.2, thick: '70–90 µm' };
-        mat2 = { name: 'BOPP / EVOH / PE Tri-layer Film', type: 'Triple-Barrier Film', otr: '1.2 cc/m²/day', wvtr: '0.5 g/m²/day', map: 'Modified Atmosphere', eco: 'BioPE Tri-layer', confidence: 89.4, thick: '80–100 µm' };
-        otr = '< 1.0 cc/m²/day (Cryogenic Barrier)'; wvtr = '< 0.5 g/m²/day (Frost Protection)'; degradation = 'Freeze-burn & sublimation loss';
+        mat1 = { name: 'PA / LLDPE Cryogenic Co-extrusion', type: 'Cryogenic Barrier Film', otr: '0.8', wvtr: '0.3', map: 'Vacuum sealed', eco: 'Recyclable Mono-PP Cryofilm', confidence: 0.962, thick: '80', cost: 260, sustainability: 55 };
+        mat2 = { name: 'BOPP / EVOH / PE Tri-layer Film', type: 'Triple-Barrier Film', otr: '1.2', wvtr: '0.5', map: 'Modified Atmosphere', eco: 'BioPE Tri-layer', confidence: 0.894, thick: '90', cost: 280, sustainability: 65 };
+        otrVal = '0.8'; wvtrVal = '0.3'; thickVal = '80'; degradation = 'Freeze-burn, moisture sublimation, and cryo-oxidation loss';
       } else if (isFresh) {
-        mat1 = { name: 'Micro-Perforated BOPP / LDPE Breathable Laminate', type: 'Breathable MAP Film', otr: '120 cc/m²/day', wvtr: '6.5 g/m²/day', map: 'Active MAP: 3–5% O₂ / 5–8% CO₂', eco: 'PLA Bio-Compostable Laminate', confidence: 95.1, thick: '45–55 µm' };
-        mat2 = { name: 'EVOH High-Barrier Polyolefin Co-extrusion', type: 'Barrier Polyolefin', otr: '4.5 cc/m²/day', wvtr: '2.1 g/m²/day', map: 'Equilibrium MAP 5% O₂ / 10% CO₂', eco: 'Recyclable Monomaterial PP Film', confidence: 88.5, thick: '60–70 µm' };
-        otr = '80–150 cc/m²/day (MAP Breathable)'; wvtr = '< 8.0 g/m²/day'; degradation = 'Enzymatic browning & respiration decay';
+        mat1 = { name: 'Micro-Perforated BOPP / LDPE Breathable Laminate', type: 'Breathable MAP Film', otr: '120', wvtr: '6.5', map: 'Active MAP: 3–5% O₂ / 5–8% CO₂', eco: 'PLA Bio-Compostable Laminate', confidence: 0.951, thick: '50', cost: 195, sustainability: 70 };
+        mat2 = { name: 'EVOH High-Barrier Polyolefin Co-extrusion', type: 'Barrier Polyolefin', otr: '4.5', wvtr: '2.1', map: 'Equilibrium MAP 5% O₂ / 10% CO₂', eco: 'Recyclable Monomaterial PP Film', confidence: 0.885, thick: '65', cost: 240, sustainability: 75 };
+        otrVal = '120'; wvtrVal = '6.5'; thickVal = '50'; degradation = 'Enzymatic browning, respiratory CO2 accumulation, and fungal mold';
       } else if (isOily) {
-        mat1 = { name: 'PET / Aluminum Foil / LLDPE High Barrier Laminate', type: 'Aluminum Laminate', otr: '0.5 cc/m²/day', wvtr: '0.4 g/m²/day', map: 'Nitrogen flush (>99.5% N₂)', eco: 'Recyclable Alu-free SiOx Coated BOPP', confidence: 97.3, thick: '85–100 µm' };
-        mat2 = { name: 'SiOx-Coated PET / PE Transparent Barrier', type: 'Transparent Barrier', otr: '3.2 cc/m²/day', wvtr: '1.0 g/m²/day', map: 'Nitrogen flush', eco: 'Compostable PLA/PBAT Film', confidence: 90.1, thick: '60–75 µm' };
-        otr = '< 2.0 cc/m²/day (High Barrier Oil-Proof)'; wvtr = '< 1.0 g/m²/day (Moisture Proof)'; degradation = 'Lipid oxidation & rancidity (Rancimat index)';
+        mat1 = { name: 'PET / Aluminum Foil / LLDPE High Barrier Laminate', type: 'Aluminum Laminate', otr: '0.5', wvtr: '0.4', map: 'Nitrogen flush (>99.5% N₂)', eco: 'Recyclable Alu-free SiOx Coated BOPP', confidence: 0.973, thick: '90', cost: 220, sustainability: 60 };
+        mat2 = { name: 'SiOx-Coated PET / PE Transparent Barrier', type: 'Transparent Barrier', otr: '3.2', wvtr: '1.0', map: 'Nitrogen flush', eco: 'Compostable PLA/PBAT Film', confidence: 0.901, thick: '70', cost: 260, sustainability: 75 };
+        otrVal = '0.5'; wvtrVal = '0.4'; thickVal = '90'; degradation = 'Lipid auto-oxidation, hydrolytic rancidity, and moisture-induced staling';
       } else if (isAmbient && shelf > 60) {
-        mat1 = { name: 'PET / Alu / LLDPE Retort Laminate', type: 'Retort Laminate', otr: '0.3 cc/m²/day', wvtr: '0.2 g/m²/day', map: 'Nitrogen flush / Vacuum', eco: 'Kraft Paper / PLA Compostable Pack', confidence: 94.7, thick: '90–110 µm' };
-        mat2 = { name: 'BOPP / EVOH Co-ex High Shelf-Life Film', type: 'EVOH Barrier Co-ex', otr: '2.1 cc/m²/day', wvtr: '1.5 g/m²/day', map: 'Inert gas flush', eco: 'Recyclable PP/EVOH Monomaterial', confidence: 87.8, thick: '70–85 µm' };
-        otr = '< 5.0 cc/m²/day (Extended Shelf Life)'; wvtr = '< 2.5 g/m²/day'; degradation = 'Moisture absorption & microbial growth';
+        mat1 = { name: 'PET / Alu / LLDPE Retort Laminate', type: 'Retort Laminate', otr: '0.3', wvtr: '0.2', map: 'Nitrogen flush / Vacuum', eco: 'Kraft Paper / PLA Compostable Pack', confidence: 0.947, thick: '100', cost: 235, sustainability: 58 };
+        mat2 = { name: 'BOPP / EVOH Co-ex High Shelf-Life Film', type: 'EVOH Barrier Co-ex', otr: '2.1', wvtr: '1.5', map: 'Inert gas flush', eco: 'Recyclable PP/EVOH Monomaterial', confidence: 0.878, thick: '80', cost: 250, sustainability: 72 };
+        otrVal = '0.3'; wvtrVal = '0.2'; thickVal = '100'; degradation = 'Moisture ingress, lipid peroxidation, and ambient microbial proliferation';
       } else {
-        mat1 = { name: 'Biaxially Oriented Polypropylene (BOPP) Film', type: 'Transparent Barrier Film', otr: '25 cc/m²/day', wvtr: '4.0 g/m²/day', map: 'Air / N₂ partial flush', eco: 'Recyclable BOPP Monomaterial', confidence: 91.2, thick: '20–30 µm' };
-        mat2 = { name: 'LDPE / HDPE Polyethylene Laminate', type: 'Polyethylene Laminate', otr: '40 cc/m²/day', wvtr: '6.0 g/m²/day', map: 'Ambient air pack', eco: 'Post-Consumer Recycled PE', confidence: 82.6, thick: '30–50 µm' };
-        otr = '15–50 cc/m²/day (Standard Barrier)'; wvtr = '< 6.0 g/m²/day'; degradation = 'General oxidation & moisture ingress';
+        mat1 = { name: 'Biaxially Oriented Polypropylene (BOPP) Film', type: 'Transparent Barrier Film', otr: '25', wvtr: '4.0', map: 'Air / N₂ partial flush', eco: 'Recyclable BOPP Monomaterial', confidence: 0.912, thick: '25', cost: 165, sustainability: 68 };
+        mat2 = { name: 'LDPE / HDPE Polyethylene Laminate', type: 'Polyethylene Laminate', otr: '40', wvtr: '6.0', map: 'Ambient air pack', eco: 'Post-Consumer Recycled PE', confidence: 0.826, thick: '40', cost: 150, sustainability: 60 };
+        otrVal = '25'; wvtrVal = '4.0'; thickVal = '25'; degradation = 'General atmospheric oxidation and ambient humidity migration';
       }
+
+      const mat3 = {
+        name: 'Compostable Bio-Film (PLA / PBAT)',
+        type: 'Bio-Polymer Barrier',
+        otr: '18',
+        wvtr: '12',
+        map: 'Light N₂ flush',
+        eco: 'Certified EN 13432 / ISO 17088 Compostable Substrate',
+        confidence: 0.852,
+        thick: '60',
+        cost: 340,
+        sustainability: 92
+      };
+
+      const mat4 = {
+        name: 'Standard Polyethylene (LLDPE)',
+        type: 'Polyolefin Monolayer',
+        otr: '1800',
+        wvtr: '18',
+        map: 'Atmospheric air',
+        eco: 'Standard Post-Consumer Recyclable PE',
+        confidence: 0.720,
+        thick: '45',
+        cost: 140,
+        sustainability: 45
+      };
+
+      const structureLayers = (nameLow.includes('chip') || nameLow.includes('pickle') || nameLow.includes('snack') || mat1.name.includes('Foil')) ? [
+        {
+          layer_name: 'Outer Substrate & Print Layer',
+          material: 'Biaxially Oriented PET (BOPET)',
+          thickness: '12 µm',
+          thickness_um: 12,
+          role: 'Printability, mechanical rigidity & thermal stability during sealing.',
+          barrier_function: 'Mechanical scuff resistance & dimensional stability.',
+          source: 'ASTM D882 / Industry Converter Datasheet',
+          test_information: 'ASTM D882 (Tensile Modulus > 210 MPa)',
+          is_barrier: false
+        },
+        {
+          layer_name: 'Hermetic Barrier Core',
+          material: 'Aluminum Foil (Alu 99.5%)',
+          thickness: '9 µm',
+          thickness_um: 9,
+          role: 'Absolute zero-transmission gas, light, and aroma barrier.',
+          barrier_function: 'Near-zero OTR and WVTR (<0.01) hermetic barrier.',
+          source: 'ASTM D3985 / ASTM F1249',
+          test_information: 'Coulometric & IR Sensor (<0.01 cc/m²/day)',
+          is_barrier: true
+        },
+        {
+          layer_name: 'Food-Contact Sealant Layer',
+          material: 'Linear Low-Density Polyethylene (LLDPE)',
+          thickness: '50 µm',
+          thickness_um: 50,
+          role: 'Hermetic heat seal & certified direct food contact safe.',
+          barrier_function: 'Moisture seal integrity & grease resistance.',
+          source: 'IS 9845 / ASTM F88',
+          test_information: 'ASTM F88 Seal Strength (> 15 N/15mm)',
+          is_barrier: false
+        }
+      ] : (isFresh ? [
+        {
+          layer_name: 'Outer Anti-Fog Face',
+          material: 'Anti-Fog Biaxially Oriented Polypropylene (BOPP)',
+          thickness: '20 µm',
+          thickness_um: 20,
+          role: 'Clarity, condensation droplet control & print surface.',
+          barrier_function: 'Anti-fog surfactant layer preventing moisture pooling.',
+          source: 'ASTM D1003 / Converter Datasheet',
+          test_information: 'Haze < 2.0%, ASTM D1003',
+          is_barrier: false
+        },
+        {
+          layer_name: 'Breathable Micro-Vented Core',
+          material: 'Laser Micro-Perforated BOPP Core',
+          thickness: '15 µm',
+          thickness_um: 15,
+          role: 'Calibrated respiratory gas exchange for equilibrium MAP.',
+          barrier_function: 'Controlled O2/CO2 permeability matching respiration rate.',
+          source: 'ASTM D3985 Modified / Laser Vent Protocol',
+          test_information: 'Target OTR 80–150 cc/m²/day',
+          is_barrier: true
+        },
+        {
+          layer_name: 'Hermetic Sealant Web',
+          material: 'Metallocene Polyethylene (mPE)',
+          thickness: '25 µm',
+          thickness_um: 25,
+          role: 'Low-temperature hermetic heat sealing and puncture buffer.',
+          barrier_function: 'Tear propagation resistance & seal integrity.',
+          source: 'IS 9845 / ASTM F88',
+          test_information: 'Seal Strength > 18 N/15mm',
+          is_barrier: false
+        }
+      ] : [
+        {
+          layer_name: 'Outer Structural Film',
+          material: 'Biaxially Oriented Polypropylene (BOPP)',
+          thickness: '20 µm',
+          thickness_um: 20,
+          role: 'Gloss, rigidity and external moisture resistance.',
+          barrier_function: 'Water vapor barrier & stiffness.',
+          source: 'ASTM D882',
+          test_information: 'Tensile Strength > 140 MPa',
+          is_barrier: false
+        },
+        {
+          layer_name: 'High Barrier Polymer Core',
+          material: 'EVOH Co-extrusion Core',
+          thickness: '5 µm',
+          thickness_um: 5,
+          role: 'Gas isolation preventing oxygen permeation.',
+          barrier_function: 'Oxygen transmission barrier (< 2.0 cc/m²/day).',
+          source: 'ASTM D3985',
+          test_information: 'OTR < 2.0 cc/m²/day @ 65% RH',
+          is_barrier: true
+        },
+        {
+          layer_name: 'Food Contact Sealant',
+          material: 'Cast Polypropylene (CPP) / LLDPE',
+          thickness: '40 µm',
+          thickness_um: 40,
+          role: 'Heat seal and food safety compliance.',
+          barrier_function: 'Hermetic seal integrity.',
+          source: 'IS 9845 / FSSAI 2018',
+          test_information: 'Seal Strength > 20 N/15mm',
+          is_barrier: false
+        }
+      ]);
+
+      const comparisonCandidates = [
+        {
+          id: 'recommended',
+          name: mat1.name,
+          role_label: 'Recommended Material',
+          is_hero: true,
+          otr_raw: parseFloat(otrVal) || 0.5,
+          wvtr_raw: parseFloat(wvtrVal) || 0.4,
+          mechanical_strength_index: 8.8,
+          cost_estimate_local: mat1.cost,
+          sustainability_score: mat1.sustainability,
+          source_reference: 'ASTM D3985 / ASTM F1249 / Converter Datasheet'
+        },
+        {
+          id: 'eco',
+          name: mat3.name,
+          role_label: 'Eco-Alternative',
+          is_hero: false,
+          otr_raw: 18.0,
+          wvtr_raw: 12.0,
+          mechanical_strength_index: 6.8,
+          cost_estimate_local: mat3.cost,
+          sustainability_score: mat3.sustainability,
+          source_reference: 'ISO 17088 / ASTM D6400 Compostable Certified'
+        },
+        {
+          id: 'standard',
+          name: mat4.name,
+          role_label: 'Standard Benchmark',
+          is_hero: false,
+          otr_raw: 1800.0,
+          wvtr_raw: 18.0,
+          mechanical_strength_index: 5.5,
+          cost_estimate_local: mat4.cost,
+          sustainability_score: mat4.sustainability,
+          source_reference: 'ASTM D882 / Industry Standard Monolayer'
+        }
+      ];
+
+      const mapAdvisory = isFresh ? {
+        target_o2_percent: 3.5,
+        target_co2_percent: 6.0,
+        target_n2_percent: 90.5,
+        micro_perforations: 'Laser micro-vented (50 µm pore aperture)'
+      } : (isOily ? {
+        target_o2_percent: 0.2,
+        target_co2_percent: 0.0,
+        target_n2_percent: 99.8,
+        micro_perforations: 'Hermetic gas-flush pouch (Zero venting)'
+      } : null);
+
+      const resolvedFoodProfile = {
+        moisture_content: { value: inputData.moistureNum !== '' ? parseFloat(inputData.moistureNum) : (isFresh ? 85.0 : (isOily ? 2.5 : 14.0)), unit: '%', source: provenanceSources.moisture || 'DATABASE' },
+        oil_fat_content: { value: inputData.oilFatNum !== '' ? parseFloat(inputData.oilFatNum) : (isOily ? 32.0 : 1.5), unit: '%', source: provenanceSources.oilFat || 'DATABASE' },
+        ph_level: { value: inputData.pHNum !== '' ? parseFloat(inputData.pHNum) : (nameLow.includes('pickle') ? 3.4 : (isFresh ? 5.8 : 6.5)), unit: 'pH', source: provenanceSources.ph || 'DATABASE' },
+        respiration_rate: { value: inputData.respirationNum !== '' ? parseFloat(inputData.respirationNum) : (isFresh ? 18.5 : 0.0), unit: 'mg CO2/kg·h', source: provenanceSources.respiration || 'DATABASE' }
+      };
+
+      const reasonsList = [
+        `High Oxygen Protection: Target OTR (${otrVal} cc/m²/day) provides hermetic barrier against lipid rancidity and aroma degradation.`,
+        `Strong Moisture Defense: Low WVTR (${wvtrVal} g/m²/day) stops moisture migration and preserves crispness.`,
+        `Storage & Shelf-Life Fit: Calibrated for ${inputData.storageType || 'ambient'} conditions (${inputData.storageTemp || 25}°C) across target ${shelf} days.`,
+        `Transit Durability: High puncture and seal integrity (${thickVal} µm structural caliper) resists rough logistical stresses.`,
+        `Priority Optimized: Top multi-criteria score aligning with your ${priority} selection.`
+      ];
 
       return {
         recommendation_id: `rec-local-${Date.now().toString(36)}`,
         dossier_id: `DOS-REC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         commodity: commName,
-        storage_type: inputData.storageType || 'chilled',
+        primary_material: mat1.name,
+        material: mat1.name,
+        shelf_life_days: shelf,
         desired_shelf_life: shelf,
+        target_otr: `${otrVal} cc/m²/day`,
+        required_otr: `${otrVal} cc/m²/day`,
+        otr: `${otrVal} cc/m²/day`,
+        target_wvtr: `${wvtrVal} g/m²/day`,
+        required_wvtr: `${wvtrVal} g/m²/day`,
+        wvtr: `${wvtrVal} g/m²/day`,
+        thickness: thickVal,
+        sealability: 'Hermetic Heat Seal (ASTM F88 > 25 N/15mm)',
+        strength_spec: 'Puncture Resistance > 22 N (ASTM D1709 / D882)',
+        map_required: mat1.map,
+        map_advisory: mapAdvisory,
+        recommended_format: isFresh ? 'Micro-Perforated Pouch / Vent Tray' : (isOily ? 'Pillow Pouch / Stand-Up Nitrogen Flush' : 'Stand-Up Barrier Pouch'),
+        eco_alternative: mat3.name,
+        cost_estimate_local: mat1.cost,
+        storage_type: inputData.storageType || 'ambient',
         priority,
-        required_otr: otr,
-        required_wvtr: wvtr,
         chemical_degradation_risk: degradation,
+        explanation_text: `Engineered packaging system configured to deliver targeted barrier protection, hermetic heat-seal integrity, and shelf-life stability up to ${shelf} days.`,
+        reasons: reasonsList,
+        alternatives: {
+          standard: {
+            name: mat4.name,
+            cost_estimate_local: mat4.cost,
+            sustainability_score: mat4.sustainability,
+            shelf_life_days: Math.max(1, Math.round(shelf * 0.5))
+          },
+          sustainable: {
+            name: mat3.name,
+            cost_estimate_local: mat3.cost,
+            sustainability_score: mat3.sustainability,
+            shelf_life_days: Math.max(1, Math.round(shelf * 0.85))
+          }
+        },
+        structure_layers: structureLayers,
+        comparison_candidates: comparisonCandidates,
+        resolved_food_profile: resolvedFoodProfile,
         ranked_materials: [
           {
             material_id: 'mat_01', rank: 1, name: mat1.name, material_type: mat1.type,
-            confidence_score: mat1.confidence, recommended_thickness: mat1.thick,
-            recommended_otr: mat1.otr, recommended_wvtr: mat1.wvtr,
+            confidence_score: mat1.confidence, recommended_thickness: `${thickVal} µm`,
+            recommended_otr: `${otrVal} cc/m²/day`, recommended_wvtr: `${wvtrVal} g/m²/day`,
+            otr_range: `${otrVal} cc/m²/day`, wvtr_range: `${wvtrVal} g/m²/day`,
+            cost_estimate_local: mat1.cost, sustainability_score: mat1.sustainability,
             sealability: 'Excellent heat-seal strength (> 25 N/15mm)',
             map_required: mat1.map, eco_alternative: mat1.eco,
-            explanation: `Optimal specification engineered for ${commName} under ${inputData.storageType || 'chilled'} storage at ${inputData.storageTemp || 4}°C over ${shelf} days.`
+            explanation: `Optimal specification engineered for ${commName} under ${inputData.storageType || 'ambient'} storage at ${inputData.storageTemp || 25}°C over ${shelf} days.`
           },
           {
             material_id: 'mat_02', rank: 2, name: mat2.name, material_type: mat2.type,
-            confidence_score: mat2.confidence, recommended_thickness: mat2.thick,
-            recommended_otr: mat2.otr, recommended_wvtr: mat2.wvtr,
+            confidence_score: mat2.confidence, recommended_thickness: `${mat2.thick} µm`,
+            recommended_otr: `${mat2.otr} cc/m²/day`, recommended_wvtr: `${mat2.wvtr} g/m²/day`,
+            otr_range: `${mat2.otr} cc/m²/day`, wvtr_range: `${mat2.wvtr} g/m²/day`,
+            cost_estimate_local: mat2.cost, sustainability_score: mat2.sustainability,
             sealability: 'Strong peelable heat seal',
             map_required: mat2.map, eco_alternative: mat2.eco,
-            explanation: 'Secondary barrier choice with strong mechanical resistance and gas isolation for multi-layer protection.'
+            explanation: 'Secondary barrier choice with high mechanical resistance and gas isolation for multi-layer protection.'
+          },
+          {
+            material_id: 'mat_03', rank: 3, name: mat3.name, material_type: mat3.type,
+            confidence_score: mat3.confidence, recommended_thickness: `${mat3.thick} µm`,
+            recommended_otr: `${mat3.otr} cc/m²/day`, recommended_wvtr: `${mat3.wvtr} g/m²/day`,
+            otr_range: `${mat3.otr} cc/m²/day`, wvtr_range: `${mat3.wvtr} g/m²/day`,
+            cost_estimate_local: mat3.cost, sustainability_score: mat3.sustainability,
+            sealability: 'Biopolymer heat seal (> 18 N/15mm)',
+            map_required: mat3.map, eco_alternative: mat3.eco,
+            explanation: 'Certified bio-based circular alternative with rapid biodegradability and industrial compostability.'
+          },
+          {
+            material_id: 'mat_04', rank: 4, name: mat4.name, material_type: mat4.type,
+            confidence_score: mat4.confidence, recommended_thickness: `${mat4.thick} µm`,
+            recommended_otr: `${mat4.otr} cc/m²/day`, recommended_wvtr: `${mat4.wvtr} g/m²/day`,
+            otr_range: `${mat4.otr} cc/m²/day`, wvtr_range: `${mat4.wvtr} g/m²/day`,
+            cost_estimate_local: mat4.cost, sustainability_score: mat4.sustainability,
+            sealability: 'Standard polyethylene seal (> 15 N/15mm)',
+            map_required: mat4.map, eco_alternative: mat4.eco,
+            explanation: 'Baseline commodity monolayer film with lower cost but limited long-term barrier protection.'
           }
         ],
         created_at: new Date().toISOString(),
@@ -918,20 +1172,18 @@ export default function GetRecommendation({ lang }) {
               </div>
 
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-serif tracking-tight">
-                {results.primary_material || results.material}
+                {results.primary_material || results.material || results.ranked_materials?.[0]?.name || 'Optimal Packaging System'}
               </h3>
 
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-3xl">
-                {results.explanation_text || `Engineered packaging system configured to deliver targeted barrier protection, hermetic heat-seal integrity, and shelf-life stability up to ${results.shelf_life_days} days.`}
+                {results.explanation_text || `Engineered packaging system configured to deliver targeted barrier protection, hermetic heat-seal integrity, and shelf-life stability up to ${results.shelf_life_days || results.desired_shelf_life || inputs.desiredShelfLife || 14} days.`}
               </p>
 
               {/* Farmer / Converter Sourcing Tip */}
               <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-emerald-300">
-                <span>&bull; Target Shelf Life: <strong>{results.shelf_life_days} Days</strong></span>
-                <span>&bull; Estimated Caliper: <strong>{results.thickness} µm</strong></span>
-                {results.cost_estimate_local && (
-                  <span>&bull; Est. Material Cost: <strong>~₹{results.cost_estimate_local}/kg</strong></span>
-                )}
+                <span>&bull; Target Shelf Life: <strong>{results.shelf_life_days || results.desired_shelf_life || inputs.desiredShelfLife || 14} Days</strong></span>
+                <span>&bull; Estimated Caliper: <strong>{results.thickness || results.ranked_materials?.[0]?.recommended_thickness || '65'} µm</strong></span>
+                <span>&bull; Est. Material Cost: <strong>~₹{results.cost_estimate_local || results.ranked_materials?.[0]?.cost_estimate_local || 220}/kg</strong></span>
               </div>
             </div>
           </div>
@@ -948,11 +1200,11 @@ export default function GetRecommendation({ lang }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               {(results.reasons && results.reasons.length > 0 ? results.reasons : [
-                `High Oxygen Protection: Target OTR (${results.target_otr || results.otr} cc/m²/day) provides hermetic barrier against lipid rancidity and aroma degradation.`,
-                `Strong Moisture Defense: Low WVTR (${results.target_wvtr || results.wvtr} g/m²/day) stops moisture migration and preserves crispness.`,
-                `Storage & Shelf-Life Fit: Calibrated for ${inputs.storageType} conditions (${inputs.storageTemp}°C) across target ${results.shelf_life_days} days.`,
-                `Transit Durability: High puncture and seal integrity (${results.thickness} µm structural caliper) resists rough logistical stresses.`,
-                `Priority Optimized: Top multi-criteria score aligning with your ${inputs.priority} selection.`
+                `High Oxygen Protection: Target OTR (${results.target_otr || results.otr || '0.5'} cc/m²/day) provides hermetic barrier against lipid rancidity and aroma degradation.`,
+                `Strong Moisture Defense: Low WVTR (${results.target_wvtr || results.wvtr || '0.4'} g/m²/day) stops moisture migration and preserves crispness.`,
+                `Storage & Shelf-Life Fit: Calibrated for ${inputs.storageType || 'ambient'} conditions (${inputs.storageTemp || 25}°C) across target ${results.shelf_life_days || results.desired_shelf_life || inputs.desiredShelfLife || 14} days.`,
+                `Transit Durability: High puncture and seal integrity (${results.thickness || results.ranked_materials?.[0]?.recommended_thickness || '65'} µm structural caliper) resists rough logistical stresses.`,
+                `Priority Optimized: Top multi-criteria score aligning with your ${inputs.priority || 'balanced'} selection.`
               ]).map((reason, idx) => (
                 <div key={idx} className="p-3.5 bg-slate-950/60 rounded-2xl border border-white/5 flex items-start gap-3">
                   <div className="w-5 h-5 rounded-lg bg-emerald-400/20 text-emerald-400 flex items-center justify-center shrink-0 font-mono font-bold text-xs mt-0.5">
@@ -983,28 +1235,28 @@ export default function GetRecommendation({ lang }) {
               {/* OTR */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono text-slate-400 block uppercase">Oxygen (OTR)</span>
-                <strong className="text-base font-mono text-sky-300 block">{results.target_otr || results.otr}</strong>
+                <strong className="text-base font-mono text-sky-300 block">{results.target_otr || results.otr || results.required_otr || results.ranked_materials?.[0]?.recommended_otr || '0.5'}</strong>
                 <span className="text-[9px] font-mono text-slate-500 block">cc/m²/day (ASTM D3985)</span>
               </div>
 
               {/* WVTR */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono text-slate-400 block uppercase">Moisture (WVTR)</span>
-                <strong className="text-base font-mono text-sky-300 block">{results.target_wvtr || results.wvtr}</strong>
+                <strong className="text-base font-mono text-sky-300 block">{results.target_wvtr || results.wvtr || results.required_wvtr || results.ranked_materials?.[0]?.recommended_wvtr || '0.4'}</strong>
                 <span className="text-[9px] font-mono text-slate-500 block">g/m²/day (ASTM F1249)</span>
               </div>
 
               {/* Thickness */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono text-slate-400 block uppercase">Thickness</span>
-                <strong className="text-base font-mono text-amber-300 block">{results.thickness}</strong>
+                <strong className="text-base font-mono text-amber-300 block">{results.thickness || results.ranked_materials?.[0]?.recommended_thickness || '65'}</strong>
                 <span className="text-[9px] font-mono text-slate-500 block">µm caliper (ASTM D6988)</span>
               </div>
 
               {/* Sealability */}
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono text-slate-400 block uppercase">Seal Integrity</span>
-                <strong className="text-xs font-semibold text-white block truncate">{results.sealability}</strong>
+                <strong className="text-xs font-semibold text-white block truncate">{results.sealability || results.ranked_materials?.[0]?.sealability || 'ASTM F88 Seal Strength'}</strong>
                 <span className="text-[9px] font-mono text-slate-500 block">ASTM F88 Seal Strength</span>
               </div>
 
@@ -1021,7 +1273,7 @@ export default function GetRecommendation({ lang }) {
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-white/5 space-y-1">
                 <span className="text-[10px] font-mono text-slate-400 block uppercase">MAP Suitability</span>
                 <strong className="text-xs font-semibold text-emerald-300 block truncate">
-                  {results.map_advisory ? `${results.map_advisory.target_o2_percent}% O₂ / ${results.map_advisory.target_co2_percent}% CO₂` : (results.map_required || 'Standard')}
+                  {results.map_advisory ? `${results.map_advisory.target_o2_percent}% O₂ / ${results.map_advisory.target_co2_percent}% CO₂` : (results.map_required || 'Standard Flushing')}
                 </strong>
                 <span className="text-[9px] font-mono text-slate-500 block">Headspace Flushing</span>
               </div>
@@ -1081,16 +1333,16 @@ export default function GetRecommendation({ lang }) {
                     Optimal System
                   </span>
                   <h4 className="text-base font-bold text-white mt-2">
-                    {results.primary_material || results.material}
+                    {results.primary_material || results.material || results.ranked_materials?.[0]?.name || 'Optimal System'}
                   </h4>
                   <p className="text-xs text-slate-300 mt-1">
-                    Highest compatibility with commodity chemistry. Fulfills target {results.shelf_life_days}-day shelf life.
+                    Highest compatibility with commodity chemistry. Fulfills target {results.shelf_life_days || results.desired_shelf_life || inputs.desiredShelfLife || 14}-day shelf life.
                   </p>
                 </div>
                 <div className="pt-2 border-t border-emerald-500/20 space-y-1 text-xs font-mono">
                   <div className="flex justify-between text-slate-300">
                     <span>Est. Cost:</span>
-                    <strong className="text-emerald-400">~₹{results.cost_estimate_local || 220}/kg</strong>
+                    <strong className="text-emerald-400">~₹{results.cost_estimate_local || results.ranked_materials?.[0]?.cost_estimate_local || 220}/kg</strong>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Sustainability:</span>
@@ -1098,7 +1350,7 @@ export default function GetRecommendation({ lang }) {
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Relative Shelf Life:</span>
-                    <strong className="text-emerald-400">{results.shelf_life_days} Days (100% Target)</strong>
+                    <strong className="text-emerald-400">{results.shelf_life_days || results.desired_shelf_life || inputs.desiredShelfLife || 14} Days (100% Target)</strong>
                   </div>
                 </div>
               </div>
@@ -1259,11 +1511,11 @@ export default function GetRecommendation({ lang }) {
                             <tr key={m.material_id} className={m.rank === 1 ? 'bg-amber-400/10 font-bold' : 'border-b border-white/5'}>
                               <td className="p-2 font-mono">#{m.rank}</td>
                               <td className="p-2 text-white">{m.name}</td>
-                              <td className="p-2 font-mono text-emerald-400">{Math.round(m.confidence_score * 100)}%</td>
+                              <td className="p-2 font-mono text-emerald-400">{Math.round(m.confidence_score > 1 ? m.confidence_score : m.confidence_score * 100)}%</td>
                               <td className="p-2 font-mono text-slate-300">{m.otr_range || m.recommended_otr}</td>
                               <td className="p-2 font-mono text-slate-300">{m.wvtr_range || m.recommended_wvtr}</td>
                               <td className="p-2 font-mono text-slate-300">~₹{m.cost_estimate_local || 200}</td>
-                              <td className="p-2 font-mono text-slate-300">{m.sustainability_score}/100</td>
+                              <td className="p-2 font-mono text-slate-300">{m.sustainability_score || 65}/100</td>
                             </tr>
                           ))}
                         </tbody>
