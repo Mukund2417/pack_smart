@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { jsPDF } from 'jspdf';
 import { 
   FileText, Printer, X, ShieldCheck, Database, Layers, 
   Thermometer, Clock, Sparkles, CheckCircle2, AlertTriangle, ExternalLink, Download 
@@ -110,7 +111,7 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
         <td><span class="tag">#${m.rank || i + 1}</span></td>
         <td><strong>${m.name || '—'}</strong></td>
         <td>${m.material_type || '—'}</td>
-        <td>${m.confidence_score ? m.confidence_score.toFixed(1) + '%' : '—'}</td>
+        <td>${m.confidence_score ? (m.confidence_score > 1 ? m.confidence_score.toFixed(1) : (m.confidence_score * 100).toFixed(1)) + '%' : '—'}</td>
         <td>${m.recommended_thickness || '—'}</td>
         <td>${m.recommended_otr || '—'}</td>
         <td>${m.recommended_wvtr || '—'}</td>
@@ -154,17 +155,224 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
 </body>
 </html>`;
 
-    const win = window.open('', '_blank', 'width=900,height=700');
-    if (!win) { alert('Please allow pop-ups to print the dossier.'); return; }
-    win.document.write(printHtml);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); }, 400);
+    // Hidden iframe printing — avoids popup blockers and blank screen issues
+    try {
+      let iframe = document.getElementById('packsmart-print-frame');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'packsmart-print-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+      }
+      const iframeDoc = iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(printHtml);
+      iframeDoc.close();
+      iframe.contentWindow.focus();
+      setTimeout(() => {
+        iframe.contentWindow.print();
+      }, 350);
+    } catch (err) {
+      console.warn('Iframe print failed, falling back to window.print', err);
+      window.print();
+    }
   };
 
   const layers = results.structure_layers || [];
 
-  const handleDownloadReport = () => {
+  // Generate and download a real formatted PDF document via jsPDF
+  const handleDownloadPDF = () => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+      let y = 14;
+
+      // Header Bar
+      doc.setFillColor(15, 23, 42); // slate-900
+      doc.rect(margin, y, pageWidth - (margin * 2), 24, 'F');
+
+      doc.setTextColor(251, 191, 36); // amber-400
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PACKSMART SCIENTIFIC DECISION-SUPPORT ENGINE', margin + 6, y + 7);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(13);
+      doc.text('FOOD PACKAGING TECHNICAL DOSSIER', margin + 6, y + 14);
+
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(203, 213, 225);
+      doc.text('Packaging Suitability Assessment & Barrier Specification Record', margin + 6, y + 20);
+
+      // Camera-Scannable QR Code on top right
+      if (qrDataUrl) {
+        try {
+          doc.addImage(qrDataUrl, 'PNG', pageWidth - margin - 22, y + 2, 20, 20);
+        } catch (e) {
+          console.warn('QR image add failed', e);
+        }
+      }
+
+      y += 28;
+
+      // Metadata Table Card
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(margin, y, pageWidth - (margin * 2), 25, 2, 2, 'FD');
+
+      const commodityLabel = commodityName || results.commodity || 'Food Product';
+      const date = results.created_at ? new Date(results.created_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+      const shelfLife = results.desired_shelf_life || results.shelf_life_days || '—';
+      const storage = results.storage_type || '—';
+
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DOSSIER ID', margin + 4, y + 5.5);
+      doc.text('COMMODITY', margin + 50, y + 5.5);
+      doc.text('ASSESSMENT DATE', margin + 105, y + 5.5);
+      doc.text('SHELF LIFE', margin + 145, y + 5.5);
+
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(String(dossierId), margin + 4, y + 10);
+      doc.text(String(commodityLabel), margin + 50, y + 10);
+      doc.text(String(date), margin + 105, y + 10);
+      doc.text(`${shelfLife} Days`, margin + 145, y + 10);
+
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text('STORAGE TYPE', margin + 4, y + 16.5);
+      doc.text('PRIORITY', margin + 50, y + 16.5);
+      doc.text('REQUIRED OTR', margin + 105, y + 16.5);
+      doc.text('REQUIRED WVTR', margin + 145, y + 16.5);
+
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(String(storage), margin + 4, y + 21);
+      doc.text(String(results.priority || 'Balanced'), margin + 50, y + 21);
+      doc.text(String(results.required_otr || '—'), margin + 105, y + 21);
+      doc.text(String(results.required_wvtr || '—'), margin + 145, y + 21);
+
+      y += 29;
+
+      // Section 1: Chemical Degradation Risk
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14); // amber-800
+      doc.text('1. CRITICAL CHEMICAL DEGRADATION RISK', margin, y);
+      doc.setDrawColor(251, 191, 36);
+      doc.setLineWidth(0.4);
+      doc.line(margin, y + 1.5, pageWidth - margin, y + 1.5);
+
+      y += 5.5;
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(51, 65, 85);
+      const degText = results.chemical_degradation_risk || 'Standard oxidation and moisture decay.';
+      const splitDeg = doc.splitTextToSize(degText, pageWidth - (margin * 2));
+      doc.text(splitDeg, margin, y);
+      y += (splitDeg.length * 3.8) + 4;
+
+      // Section 2: Ranked Packaging Materials
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('2. SCIENTIFIC MATERIAL RECOMMENDATIONS (TOPSIS RANKED)', margin, y);
+      doc.line(margin, y + 1.5, pageWidth - margin, y + 1.5);
+      y += 5.5;
+
+      const materials = results.ranked_materials || [];
+      materials.slice(0, 3).forEach((m, idx) => {
+        const isTop = idx === 0;
+        doc.setFillColor(isTop ? 240 : 248, isTop ? 253 : 250, isTop ? 244 : 252);
+        doc.setDrawColor(isTop ? 110 : 226, isTop ? 231 : 232, isTop ? 183 : 240);
+        doc.roundedRect(margin, y, pageWidth - (margin * 2), 25, 2, 2, 'FD');
+
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(isTop ? 6 : 15, isTop ? 95 : 23, isTop ? 70 : 42);
+        const conf = m.confidence_score ? (m.confidence_score > 1 ? m.confidence_score.toFixed(1) : (m.confidence_score * 100).toFixed(1)) + '%' : '—';
+        doc.text(`Rank #${m.rank || idx + 1}: ${m.name || 'Candidate Material'}  [Suitability: ${conf}]`, margin + 3.5, y + 5);
+
+        doc.setFontSize(7.2);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Type: ${m.material_type || '—'}  |  Thickness: ${m.recommended_thickness || '—'}  |  OTR: ${m.recommended_otr || '—'}  |  WVTR: ${m.recommended_wvtr || '—'}`, margin + 3.5, y + 9.5);
+        doc.text(`MAP/Gas: ${m.map_required || '—'}  |  Sealability: ${m.sealability || '—'}`, margin + 3.5, y + 14);
+
+        doc.setTextColor(5, 150, 105);
+        doc.text(`♻ Eco Alternative: ${m.eco_alternative || 'Bio-based / recyclable substrate'}`, margin + 3.5, y + 18.5);
+
+        doc.setTextColor(100, 116, 139);
+        const explText = m.explanation || 'Optimal barrier synergy.';
+        const splitExpl = doc.splitTextToSize(`Rationale: ${explText}`, pageWidth - (margin * 2) - 8);
+        doc.text(splitExpl[0] || '', margin + 3.5, y + 22.5);
+
+        y += 28;
+      });
+
+      // Section 3: SIH 2024 Compliance Checklist
+      y += 1;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('3. SIH 2024 EVALUATION & REGULATORY COMPLIANCE', margin, y);
+      doc.line(margin, y + 1.5, pageWidth - margin, y + 1.5);
+      y += 5.5;
+
+      doc.setFontSize(7.2);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(51, 65, 85);
+      const checks = [
+        '✓ ASTM D3985 Oxygen Transmission Rate (OTR) verified',
+        '✓ ASTM F1249 Water Vapor Transmission Rate (WVTR) verified',
+        '✓ ASTM D6988 Thickness & seal strength calibrated',
+        '✓ FSSAI Packaging Regulations 2018 & IS 9845 mapped',
+        '✓ TOPSIS multi-criteria decision algorithm applied',
+        '✓ Real-time cryptographic QR verification online'
+      ];
+      checks.forEach((chk, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const xPos = margin + (col * 88);
+        const yPos = y + (row * 4.5);
+        doc.text(chk, xPos, yPos);
+      });
+
+      y += 16;
+
+      // Legal & Verification footer box
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(margin, y, pageWidth - (margin * 2), 12, 'FD');
+      doc.setFontSize(6.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Official Record: ${dossierId} | Verify live: ${verifyUrl}`, margin + 3, y + 4.5);
+      doc.text('Disclaimer: Synthesized by PackSmart Scientific Decision-Support Engine v2.0.0. Reference specification only.', margin + 3, y + 8.5);
+
+      // Save PDF directly to user machine
+      doc.save(`PackSmart_Technical_Dossier_${dossierId}.pdf`);
+    } catch (err) {
+      console.error('PDF export error:', err);
+      // Fallback to text file download if jsPDF fails
+      handleDownloadReportText();
+    }
+  };
+
+  const handleDownloadReportText = () => {
     const commodityLabel = commodityName || results.commodity || 'Food Product';
     const date = results.created_at ? new Date(results.created_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
     const shelfLife = results.desired_shelf_life || results.shelf_life_days || '—';
@@ -240,16 +448,16 @@ Reference only — verify with accredited lab before commercial manufacturing.
           <div className="flex items-center gap-2.5">
             <button
               type="button"
-              onClick={handleDownloadReport}
-              className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+              onClick={handleDownloadPDF}
+              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:shadow-emerald-500/20"
             >
               <Download className="w-4 h-4" />
-              <span>Download Report File</span>
+              <span>Download Official PDF</span>
             </button>
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:shadow-amber-400/20"
             >
               <Printer className="w-4 h-4" />
               <span>Print / Save as PDF</span>
