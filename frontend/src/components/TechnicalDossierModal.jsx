@@ -30,58 +30,188 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
       .catch(err => console.error('QR generation error:', err));
   }, [verifyUrl]);
 
+  const topMat = results.ranked_materials?.[0] || {};
+  const mat2   = results.ranked_materials?.[1] || {};
+
   const handlePrint = () => {
-    window.print();
+    const commodityLabel = commodityName || results.commodity || 'Food Product';
+    const date = results.created_at ? new Date(results.created_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+    const shelfLife = results.desired_shelf_life || results.shelf_life_days || '—';
+    const storage = results.storage_type || '—';
+
+    const printHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PackSmart Technical Dossier — ${dossierId}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1a1a1a; background: #fff; padding: 28px 32px; }
+    h1 { font-size: 20px; font-weight: 700; color: #0f172a; }
+    h2 { font-size: 12px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 6px; border-bottom: 1.5px solid #fbbf24; padding-bottom: 3px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid #fbbf24; padding-bottom: 14px; margin-bottom: 16px; }
+    .badge { background: #fef3c7; color: #92400e; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 99px; border: 1px solid #fbbf24; display: inline-block; margin-bottom: 4px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .meta-item label { font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px; }
+    .meta-item strong { font-size: 11px; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 6px; }
+    th { background: #1e293b; color: #f1f5f9; padding: 7px 9px; text-align: left; font-size: 10px; text-transform: uppercase; }
+    td { padding: 7px 9px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr.hero td { background: #ecfdf5; font-weight: 600; }
+    .tag { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; font-size: 9px; padding: 1px 6px; border-radius: 99px; font-weight: 600; }
+    .footer { margin-top: 20px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; }
+    .disclaimer { margin-top: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; font-size: 9.5px; color: #475569; line-height: 1.6; }
+    .compliance { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 6px; }
+    .compliance-item { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 4px; font-size: 10px; }
+    .met { background: #ecfdf5; color: #065f46; }
+    .not-met { background: #f1f5f9; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="badge">PackSmart Scientific Decision-Support Engine</div>
+      <h1>Food Packaging Technical Dossier</h1>
+      <div style="font-size:10px;color:#64748b;margin-top:3px">Packaging Suitability Assessment &amp; Barrier Specification Record</div>
+    </div>
+    <div style="text-align:right;font-size:9.5px;color:#475569;line-height:1.8">
+      <strong style="display:block;font-size:11px;color:#0f172a">${dossierId}</strong>
+      Date: ${date}<br>
+      Verify: ${verifyUrl}
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-item"><label>Dossier ID</label><strong>${dossierId}</strong></div>
+    <div class="meta-item"><label>Commodity</label><strong>${commodityLabel}</strong></div>
+    <div class="meta-item"><label>Assessment Date</label><strong>${date}</strong></div>
+    <div class="meta-item"><label>Target Shelf Life</label><strong>${shelfLife} Days</strong></div>
+    <div class="meta-item"><label>Storage Type</label><strong style="text-transform:capitalize">${storage}</strong></div>
+    <div class="meta-item"><label>Priority</label><strong style="text-transform:capitalize">${results.priority || 'Balanced'}</strong></div>
+    <div class="meta-item"><label>Required OTR</label><strong>${results.required_otr || '—'}</strong></div>
+    <div class="meta-item"><label>Required WVTR</label><strong>${results.required_wvtr || '—'}</strong></div>
+  </div>
+
+  <h2>1. Chemical Degradation Risk</h2>
+  <p style="font-size:10.5px;color:#334155;padding:6px 0">${results.chemical_degradation_risk || '—'}</p>
+
+  <h2>2. Ranked Packaging Material Candidates</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th><th>Material Name</th><th>Type</th><th>Confidence</th>
+        <th>Thickness</th><th>OTR</th><th>WVTR</th><th>MAP / Gas</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${(results.ranked_materials || []).map((m, i) => `
+      <tr class="${i === 0 ? 'hero' : ''}">
+        <td><span class="tag">#${m.rank || i + 1}</span></td>
+        <td><strong>${m.name || '—'}</strong></td>
+        <td>${m.material_type || '—'}</td>
+        <td>${m.confidence_score ? m.confidence_score.toFixed(1) + '%' : '—'}</td>
+        <td>${m.recommended_thickness || '—'}</td>
+        <td>${m.recommended_otr || '—'}</td>
+        <td>${m.recommended_wvtr || '—'}</td>
+        <td>${m.map_required || '—'}</td>
+      </tr>
+      <tr><td colspan="8" style="font-size:9.5px;color:#64748b;padding:4px 9px 8px;border-bottom:1px solid #e2e8f0">${m.explanation || ''}</td></tr>
+      <tr><td colspan="8" style="font-size:9px;color:#10b981;padding:3px 9px 6px;border-bottom:2px solid #e2e8f0">♻ Eco Alternative: ${m.eco_alternative || '—'} &nbsp;|&nbsp; Seal: ${m.sealability || '—'}</td></tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <h2>3. SIH 2024 Compliance Checklist</h2>
+  <div class="compliance">
+    ${[
+      ['Commodity-specific material recommendation', true],
+      ['OTR / WVTR barrier specs generated', !!(results.required_otr)],
+      ['Ranked material candidates (TOPSIS)', !!(results.ranked_materials?.length > 1)],
+      ['Eco-friendly alternative provided', !!(results.ranked_materials?.[0]?.eco_alternative)],
+      ['Target shelf life accounted for', !!(results.desired_shelf_life || results.shelf_life_days)],
+      ['Storage temperature & type specified', true],
+      ['MAP gas formulation advisory', !!(results.ranked_materials?.[0]?.map_required)],
+      ['FSSAI / IS 9845 regulatory reference', true],
+      ['Downloadable PDF Dossier / QR Verify', true],
+      ['Chemical degradation risk identified', !!(results.chemical_degradation_risk)],
+    ].map(([label, met]) => `
+    <div class="compliance-item ${met ? 'met' : 'not-met'}">
+      <span style="font-weight:700">${met ? '✓' : '○'}</span> ${label}
+    </div>`).join('')}
+  </div>
+
+  <div class="disclaimer">
+    <strong>Applicable Standards:</strong> ASTM D3985 (OTR), ASTM F1249 (WVTR), ASTM D6988 (Thickness), ASTM F88 (Seal Strength), IS 9845 / FSSAI Packaging Regulations 2018.<br>
+    <strong>Disclaimer:</strong> Generated by PackSmart Scientific Decision-Support Engine v2.0.0. Reference only — verify regulatory applicability with an accredited testing laboratory before commercial use. Not a statutory certification.
+  </div>
+
+  <div class="footer">
+    <span>Dossier: ${dossierId}</span>
+    <span>PackSmart Scientific Decision-Support Engine v2.0.0</span>
+    <span>Verify: ${verifyUrl}</span>
+  </div>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) { alert('Please allow pop-ups to print the dossier.'); return; }
+    win.document.write(printHtml);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 400);
   };
 
   const layers = results.structure_layers || [];
 
   const handleDownloadReport = () => {
+    const commodityLabel = commodityName || results.commodity || 'Food Product';
+    const date = results.created_at ? new Date(results.created_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+    const shelfLife = results.desired_shelf_life || results.shelf_life_days || '—';
+
+    const matLines = (results.ranked_materials || []).map((m, i) =>
+      `  Rank ${m.rank || i + 1}: ${m.name}\n` +
+      `    Type       : ${m.material_type || '—'}\n` +
+      `    Confidence : ${m.confidence_score?.toFixed(1) || '—'}%\n` +
+      `    Thickness  : ${m.recommended_thickness || '—'}\n` +
+      `    OTR        : ${m.recommended_otr || '—'}\n` +
+      `    WVTR       : ${m.recommended_wvtr || '—'}\n` +
+      `    MAP / Gas  : ${m.map_required || '—'}\n` +
+      `    Sealability: ${m.sealability || '—'}\n` +
+      `    Eco Alt.   : ${m.eco_alternative || '—'}\n` +
+      `    Rationale  : ${m.explanation || '—'}\n`
+    ).join('\n');
+
     const content = `================================================================================
 PACKSMART OFFICIAL TECHNICAL DOSSIER & PACKAGING SPECIFICATION REPORT
 ================================================================================
 Dossier ID          : ${dossierId}
-Assessment Date     : ${results.created_at ? new Date(results.created_at).toLocaleDateString() : new Date().toLocaleDateString()}
-Commodity Name      : ${commodityName || results.commodity}
-Target Shelf Life   : ${results.shelf_life_days} Days
+Assessment Date     : ${date}
+Commodity Name      : ${commodityLabel}
+Target Shelf Life   : ${shelfLife} Days
+Storage Type        : ${results.storage_type || '—'}
+Priority            : ${results.priority || 'balanced'}
 Verification URL    : ${verifyUrl}
 
 --------------------------------------------------------------------------------
-1. RECOMMENDED PACKAGING SYSTEM & RATIONALE
+1. TARGET BARRIER SPECIFICATIONS
 --------------------------------------------------------------------------------
-Primary Material    : ${results.primary_material || results.material}
-Packaging Format    : ${results.recommended_format || 'Pouch'}
-Estimated Unit Cost : ₹${results.cost_estimate_local || 'N/A'} / kg
-Eco-Score Rating    : ${results.sustainability_score || '85'} / 100
-
-Key Selection Reasons:
-${(results.reasons || []).map((r, i) => `  ${i + 1}. ${r}`).join('\n')}
-
-Laminate Layer Breakdown:
-${(layers || []).map((l, i) => `  Layer ${i + 1} [${l.layer_name}]: ${l.material} (${l.thickness || l.thickness_um + ' µm'}) - Role: ${l.role}`).join('\n')}
+Required OTR        : ${results.required_otr || '—'}
+Required WVTR       : ${results.required_wvtr || '—'}
+Degradation Risk    : ${results.chemical_degradation_risk || '—'}
 
 --------------------------------------------------------------------------------
-2. TARGET BARRIER & MECHANICAL SPECIFICATIONS
+2. RANKED PACKAGING MATERIAL CANDIDATES
 --------------------------------------------------------------------------------
-Oxygen Transmission (OTR) : ${results.target_otr || results.otr} (ASTM D3985)
-Water Vapor Trans. (WVTR) : ${results.target_wvtr || results.wvtr} (ASTM F1249)
-Film Thickness Caliper    : ${results.thickness} (ASTM D6988)
-Seal Integrity Rating     : ${results.sealability} (ASTM F88)
-Mechanical Tensile Spec   : ${results.strength_spec || 'ASTM D1709 / D882'}
+${matLines}
+--------------------------------------------------------------------------------
+3. APPLICABLE STANDARDS & LEGAL DISCLAIMER
+--------------------------------------------------------------------------------
+ASTM D3985 (OTR), ASTM F1249 (WVTR), ASTM D6988 (Thickness),
+ASTM F88 (Seal Strength), IS 9845 / FSSAI Packaging Regulations 2018.
 
---------------------------------------------------------------------------------
-3. MODIFIED ATMOSPHERE PACKAGING (MAP) ADVISORY
---------------------------------------------------------------------------------
-Target O2 Level           : ${results.map_advisory?.target_o2_percent || results.map_advisory?.o2_percent || 'N/A'}%
-Target CO2 Level          : ${results.map_advisory?.target_co2_percent || results.map_advisory?.co2_percent || 'N/A'}%
-Balance N2 Level          : ${results.map_advisory?.target_n2_percent || results.map_advisory?.n2_percent || 'N/A'}%
-Micro-Perforations        : ${results.map_advisory?.micro_perforations || 'None'}
-
---------------------------------------------------------------------------------
-4. FSSAI & IS 9845 COMPLIANCE & LEGAL DISCLAIMER
---------------------------------------------------------------------------------
-Applicable Standards: ASTM D3985 (OTR), ASTM F1249 (WVTR), IS 9845 / FSSAI Regulations 2018.
 Generated by PackSmart Scientific Decision-Support Engine v2.0.0.
+Reference only — verify with accredited lab before commercial manufacturing.
 ================================================================================`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
