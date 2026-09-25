@@ -92,6 +92,7 @@ export default function GetRecommendation({ lang }) {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
+  const [analysisError, setAnalysisError] = useState(null);
   const [demoBanner, setDemoBanner] = useState(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
   const [showAdvancedInResult, setShowAdvancedInResult] = useState(false);
