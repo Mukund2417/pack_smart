@@ -284,6 +284,20 @@ export default function GetRecommendation({ lang }) {
 
     const commName = inputData.commodityName || (searchQuery.trim() || 'Food Product');
 
+    const fetchWithTimeout = (promise, ms = 5000) => {
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`Backend connection timed out after ${ms / 1000} seconds`));
+        }, ms);
+      });
+
+      return Promise.race([
+        promise.finally(() => clearTimeout(timeoutId)),
+        timeoutPromise
+      ]);
+    };
+
     try {
       const payload = {
         commodity_id: inputData.commodityId || undefined,
@@ -302,7 +316,7 @@ export default function GetRecommendation({ lang }) {
         demo_commodity: searchParams.get('demo') || undefined
       };
 
-      const res = await api.generateRecommendation(payload);
+      const res = await fetchWithTimeout(api.generateRecommendation(payload), 5000);
       setResults(res);
 
       setTimeout(() => {
