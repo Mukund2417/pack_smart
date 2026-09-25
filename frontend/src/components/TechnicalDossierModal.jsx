@@ -9,16 +9,17 @@ import {
 export default function TechnicalDossierModal({ isOpen, onClose, results, commodityName, resolvedProfile }) {
   const [qrDataUrl, setQrDataUrl] = useState('');
 
-  if (!isOpen || !results) return null;
-
-  const recId = results.recommendation_id || 'REC-SAMPLE-01';
-  const dossierId = results.dossier_id || `DOS-REC-${recId.slice(0, 8).toUpperCase()}`;
-  const verifyUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/verify/${dossierId}` 
+  // Compute stable derived values — safe when results is null (hooks must run before any early return)
+  const recId = results?.recommendation_id || 'REC-SAMPLE-01';
+  const dossierId = results?.dossier_id || `DOS-REC-${recId.slice(0, 8).toUpperCase()}`;
+  const verifyUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/verify/${dossierId}`
     : `https://packsmart.app/verify/${dossierId}`;
 
   // Generate REAL camera-scannable QR Code pointing to verification URL
+  // useEffect MUST be called unconditionally — no early return before this
   useEffect(() => {
+    if (!isOpen || !results) return;
     QRCode.toDataURL(verifyUrl, {
       width: 160,
       margin: 1,
@@ -29,7 +30,10 @@ export default function TechnicalDossierModal({ isOpen, onClose, results, commod
     })
       .then(url => setQrDataUrl(url))
       .catch(err => console.error('QR generation error:', err));
-  }, [verifyUrl]);
+  }, [verifyUrl, isOpen, results]);
+
+  // Early return AFTER all hooks
+  if (!isOpen || !results) return null;
 
   const topMat = results.ranked_materials?.[0] || {};
   const mat2   = results.ranked_materials?.[1] || {};
