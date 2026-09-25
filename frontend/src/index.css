@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-brand-bg text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Brand Card & Utility Classes */
+.brand-card {
+  @apply bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300;
+}
+
+.brand-badge {
+  @apply inline-flex items-center gap-2 bg-brand-green/10 dark:bg-brand-green/20 text-brand-green dark:text-emerald-400 px-4 py-1.5 rounded-full text-xs font-semibold;
+}
+
+/* Glassmorphism Pill & Modal Utilities */
+.glass-pill {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg transition-all duration-300;
+}
+
+.glass-pill-active {
+  background: rgba(251, 191, 36, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(253, 224, 71, 0.5);
+  color: #0f172a;
+  box-shadow: 0 0 25px rgba(250, 204, 21, 0.4);
+}
+
+.glass-card {
+  @apply bg-white/80 dark:bg-[#0a1426]/75 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-xl transition-all duration-300;
+}
+
+/* Hide scrollbar for chrome, safari and opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #030a17;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(250, 204, 21, 0.6);
+}
+
+/* Gradient Overlay for Canvas background */
+.hero-gradient {
+  background: radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.15) 0%, rgba(3, 10, 23, 0.85) 70%, #030a17 100%);
+}
+
+.title-glow {
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.25), 0 0 80px rgba(14, 165, 233, 0.2);
+}
+
+/* 3D Transform Utilities for Flashcards */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

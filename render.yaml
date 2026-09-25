@@ -1,0 +1,14 @@
+services:
+  # FastAPI Backend
+  - type: web
+    name: packsmart-backend
+    env: docker
+    dockerfilePath: ./backend.Dockerfile
+    plan: free
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://packsmart.vercel.app,http://localhost:5173
+      - key: DATABASE_URL
+        value: sqlite:///./packsmart.db # Using SQLite for this demo; use PostgreSQL for real production
+      - key: ENVIRONMENT
+        value: production
