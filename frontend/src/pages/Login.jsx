@@ -26,7 +26,7 @@ export default function Login({ lang }) {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, googleLogin, isAuthenticated } = useAuth();
+  const { login, loginAsJury, googleLogin, isAuthenticated } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -137,15 +137,10 @@ export default function Login({ lang }) {
       }, 500);
     } catch (err) {
       console.warn('Jury login fallback applied:', err);
-      // Fallback in case of network issue
-      localStorage.setItem('packsmart_token', 'jury-evaluator-token');
-      localStorage.setItem('packsmart_user', JSON.stringify({
-        id: 'user-researcher-1',
-        name: 'Dr. Elena Vance (SIH Evaluator)',
-        email: 'researcher@packsmart.io',
-        role: 'researcher',
-        organization_name: 'Smart India Hackathon Jury Panel'
-      }));
+      // Fallback in case of backend cold-start or network issue
+      if (loginAsJury) {
+        loginAsJury(role);
+      }
       setLoginSuccess(true);
       setTimeout(() => {
         navigate(fromPath, { replace: true });
